@@ -1,0 +1,8 @@
+FROM flatten-ipsw
+
+COPY requirements-dev.txt requirements-dev.txt
+RUN pip3 install -r requirements-dev.txt
+
+ADD test test
+
+CMD pytest
