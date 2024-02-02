@@ -2,11 +2,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator, Optional
 import zipfile
-
-class NotAnIPSW(Exception):
-    def __init__(self, path: Path):
-        self.path = path
-        super().__init__(f'{path} is not an IPSW file.')
+from flattenipsw.exception import NotAnIPSW
 
 def ipsw_unzip(ipsw: Path, out: Optional[Path]) -> Path:
     """Unzip an IPSW file to a directory.
@@ -23,9 +19,9 @@ def ipsw_unzip(ipsw: Path, out: Optional[Path]) -> Path:
 
     out.mkdir(parents=True, exist_ok=True)
 
-    with ipsw_open(ipsw) as zf:
+    with ipsw_open(ipsw=ipsw) as zf:
 
-        zf.extractall(out)
+        zf.extractall(path=out)
 
     return out
 
