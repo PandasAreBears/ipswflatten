@@ -11,4 +11,4 @@ fi
 export DOCKER_BUILDKIT=1
 docker build -t flatten-ipsw .
 docker build -f Dockerfile.test -t flatten-ipsw-test .
-docker run --rm --privileged -v $(pwd)/test/resources/ipsw:/app/test/resources/ipsw flatten-ipsw-test
+docker run --rm --privileged -v $(pwd)/test/resources/ipsw:/app/test/resources/ipsw flatten-ipsw-test "$@"
