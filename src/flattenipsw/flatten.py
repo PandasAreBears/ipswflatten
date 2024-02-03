@@ -42,7 +42,7 @@ def ipsw_open(ipsw: Path) -> Iterator[zipfile.ZipFile]:
     try:
         with zipfile.ZipFile(ipsw, 'r') as zf:
             try:
-                zf.getinfo('Restore.plist')
+                zf.getinfo('BuildManifest.plist')
             except (KeyError, zipfile.BadZipFile):
                 raise NotAnIPSW(ipsw)
 
