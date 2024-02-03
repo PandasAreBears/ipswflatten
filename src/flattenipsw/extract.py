@@ -1,7 +1,11 @@
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 import plistlib
+import tempfile
+from typing import Generator
 from flattenipsw.exception import InvalidBuildManfest
+import subprocess
 
 BUILD_MANIFEST = "BuildManifest.plist"
 
@@ -43,3 +47,56 @@ def ipsw_build_dmg_path(ipsw_extract: Path) -> DmgPath:
         dyld_shared_cache = None
         
     return dmg_path
+
+
+@contextmanager
+def ipsw_mount_dmg_context(dmg_path: Path, mount_point: Path | None = None) -> Generator[Path, None, None]:
+    """Mount a DMG file and yield the mount point.
+    
+    Args:
+        dmg_path: The path to the DMG file.
+        mount_point: The path to the mount point. If None, a temporary directory will be created.
+        
+    Yields:
+        The path to the mount point.
+
+    Raises:
+        subprocess.CalledProcessError: If the apfs-fuse or fusermount command fails.
+    """
+    yield (mount_point := ipsw_mount_dmg(dmg_path, mount_point))
+
+    ipsw_unmount_dmg(mount_point)
+
+def ipsw_mount_dmg(dmg_path: Path, mount_point: Path | None = None) -> Path:
+    """Mount a DMG file and return the mount point.
+    
+    Args:
+        dmg_path: The path to the DMG file.
+        mount_point: The path to the mount point. If None, a temporary directory will be created.
+        
+    Returns:
+        The path to the mount point.
+
+    Raises:
+        subprocess.CalledProcessError: If the apfs-fuse command fails.
+    """
+    if mount_point is None:
+        mount_point = Path(tempfile.mkdtemp())
+
+    command = f"apfs-fuse -o uid=$UID {dmg_path} {mount_point}"
+    subprocess.run(command, shell=True, check=True)
+
+    return mount_point
+
+def ipsw_unmount_dmg(mount_point: Path) -> None:
+    """Unmount a DMG file.
+    
+    Args:
+        mount_point: The path to the mount point.
+
+    Raises:
+        subprocess.CalledProcessError: If the fusermount command fails.
+    """
+    command = f"fusermount -u {mount_point}"
+    subprocess.run(command, shell=True, check=True)
+    mount_point.rmdir()
