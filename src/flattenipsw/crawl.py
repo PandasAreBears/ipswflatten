@@ -58,6 +58,28 @@ class BinaryFileHandler(FileHandler):
 
         return [file.name]
 
+class DyldSharedCacheHandler(FileHandler):
+    @property
+    def file_name(self) -> str:
+        return "dyld_shared_cache_arm64"
+    
+    def handle_file(self, file: Path, output: Path) -> list[str]:
+        command = f"dyldex_all {file}"
+        subprocess.run(command, shell=True, check=True)
+
+        # Run dyldex_all creates a folder named 'binaries' in the current directory.
+        files = []
+        for file in (file.parent / "binaries").rglob("*"):
+            if "Mach-O" in _ipsw_get_file_type(file):
+                shutil.copy(file, output / file.name)
+                files.append(file.name)
+
+        return files
+
+BINARY_FILE_HANDLERS = [
+    BinaryFileHandler(),
+    DyldSharedCacheHandler()
+]
     
 
 def ipsw_crawl_filesystem(mount_point: Path, file_handlers: Sequence[FileHandler], output: Path | None = None) -> Path:
