@@ -5,7 +5,7 @@ Extracts all Mach-O binaries from an iOS IPSW file, including splitting the dyld
 ## Installation 
 
 ```
-docker pull pandasarebears/flatten-ipsw
+docker pull pandasarebears/flatten-ipsw:latest
 ```
 
 ## Usage

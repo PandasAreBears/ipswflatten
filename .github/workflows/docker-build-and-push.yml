@@ -3,7 +3,7 @@ name: Build and Push Docker image
 on:
   push:
     tags:
-      - '*'
+      - 'v*'
 
 jobs:
   build-and-push:
@@ -24,4 +24,7 @@ jobs:
         context: .
         file: ./Dockerfile
         push: true
-        tags: pandasarebears/flatten-ipsw:${{ github.ref_name }}
+        tags: |
+          pandasarebears/flatten-ipsw:${{ github.ref_name }}
+          pandasarebears/flatten-ipsw:latest
+
