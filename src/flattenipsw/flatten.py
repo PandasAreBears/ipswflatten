@@ -1,10 +1,17 @@
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Iterator, Optional
+from typing import Generator, Iterator
 import zipfile
 from flattenipsw.exception import NotAnIPSW
+import shutil
 
-def ipsw_unzip(ipsw: Path, out: Optional[Path]) -> Path:
+@contextmanager
+def ipsw_unzip_context(ipsw: Path, out: Path | None = None) -> Generator[Path, None, None]:
+    yield (output := ipsw_unzip(ipsw=ipsw, out=out))
+
+    shutil.rmtree(output)
+
+def ipsw_unzip(ipsw: Path, out: Path | None = None) -> Path:
     """Unzip an IPSW file to a directory.
 
     Args:
