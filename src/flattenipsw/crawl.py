@@ -5,6 +5,9 @@ import shutil
 import subprocess
 from typing import Sequence
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class FileHandler(ABC):
@@ -104,13 +107,17 @@ def ipsw_crawl_filesystem(mount_point: Path, file_handlers: Sequence[FileHandler
         for handler in file_handlers:
             if handler.file_type is not None:
                 if handler.file_type in _ipsw_get_file_type(file):
+                    logger.info(f"Invoking handler {handler.__class__.__name__} for matched file type on {file}")
                     emissions = handler.handle_file(file, output)
                     locations |= {str(file.relative_to(mount_point)): emission for emission in emissions}
+                    logger.info(f"Emitted {len(emissions)} file{'s' if len(emissions) else ''} from {file} to {output}")
 
             if handler.file_name is not None:
                 if handler.file_name in file.name:
+                    logger.info(f"Invoking handler {handler.__class__.__name__} for matched file name on {file}")
                     emissions = handler.handle_file(file, output)
                     locations |= {str(file.relative_to(mount_point)): emission for emission in emissions}
+                    logger.info(f"Emitted {len(emissions)} file{'s' if len(emissions) else ''} from {file} to {output}")
 
 
     with open(output / "locations.json", "w") as f:

@@ -4,11 +4,15 @@ from typing import Generator, Iterator
 import zipfile
 from flattenipsw.exception import NotAnIPSW
 import shutil
+import logging
+
+logger = logging.getLogger(__name__)
 
 @contextmanager
 def ipsw_unzip_context(ipsw: Path, out: Path | None = None) -> Generator[Path, None, None]:
     yield (output := ipsw_unzip(ipsw=ipsw, out=out))
 
+    logging.info(f"Cleaning up extracted IPSW at {output}")
     shutil.rmtree(output)
 
 def ipsw_unzip(ipsw: Path, out: Path | None = None) -> Path:
@@ -28,6 +32,7 @@ def ipsw_unzip(ipsw: Path, out: Path | None = None) -> Path:
 
     with ipsw_open(ipsw=ipsw) as zf:
 
+        logger.info(f"Extracting IPSW to {out}")
         zf.extractall(path=out)
 
     return out

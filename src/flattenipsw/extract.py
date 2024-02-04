@@ -6,6 +6,9 @@ import tempfile
 from typing import Generator
 from flattenipsw.exception import InvalidBuildManfest
 import subprocess
+import logging
+
+logger = logging.getLogger(__name__)
 
 BUILD_MANIFEST = "BuildManifest.plist"
 
@@ -35,6 +38,7 @@ def ipsw_build_dmg_path(ipsw_extract: Path) -> DmgPath:
     try:
         filesystem = manifest["BuildIdentities"][0]["Manifest"]["OS"]["Info"]["Path"]
         fs_path = ipsw_extract / filesystem
+        logger.info(f"Found filesystem dmg at {fs_path}")
     except KeyError:
         raise InvalidBuildManfest(path=build_manifest, key="BuildIdentities[0].Manifest.OS.Info.Path")
 
@@ -43,6 +47,7 @@ def ipsw_build_dmg_path(ipsw_extract: Path) -> DmgPath:
     try:
         dyld_shared_cache = manifest["BuildIdentities"][0]["Manifest"]["Cryptex1,SystemOS"]["Info"]["Path"]
         dmg_path.dyld_shared_cache = ipsw_extract / dyld_shared_cache
+        logger.info(f"Found dyld shared cache dmg at {fs_path}")
     except (KeyError, TypeError):
         dyld_shared_cache = None
         
@@ -85,6 +90,7 @@ def ipsw_mount_dmg(dmg_path: Path, mount_point: Path | None = None) -> Path:
 
     command = f"apfs-fuse -o uid=$UID {dmg_path} {mount_point}"
     subprocess.run(command, shell=True, check=True)
+    logging.info(f"Mounted {dmg_path} at {mount_point}")
 
     return mount_point
 
@@ -100,3 +106,4 @@ def ipsw_unmount_dmg(mount_point: Path) -> None:
     command = f"fusermount -u {mount_point}"
     subprocess.run(command, shell=True, check=True)
     mount_point.rmdir()
+    logging.info(f"Unmounted {mount_point}")
