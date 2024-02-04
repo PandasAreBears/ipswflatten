@@ -19,4 +19,5 @@ RUN pip3 install -r requirements.txt
 
 ADD src src
 
-CMD ["/bin/bash"]
+ENTRYPOINT [ "python3", "src/flattenipsw" ]
+CMD [ "--help" ]
