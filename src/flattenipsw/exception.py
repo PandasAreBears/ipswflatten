@@ -14,3 +14,9 @@ class InvalidBuildManfest(IPSWFlattenException):
         self.path = path
         super().__init__(f'{path} is not a valid BuildManifest.plist file. It is missing the key {key}.')
 
+class FailedToCreateOutputDirectory(IPSWFlattenException):
+    def __init__(self, path: Path) -> None:
+        self.path = path
+        super().__init__(f'Failed to create output directory at {path}.')
+
+

@@ -1,9 +1,8 @@
 
 from pathlib import Path
+import tempfile
 import pytest
-from flattenipsw.crawl import FileHandler, ipsw_crawl_filesystem
-import shutil
-import json
+from flattenipsw.crawl import FileRule, ipsw_crawl_filesystem
 
 
 @pytest.fixture
@@ -12,69 +11,63 @@ def fake_fs():
 
 
 def test_fs_crawl_name_signature(fake_fs: Path) -> None:
-    class TestHandler(FileHandler):
+    class TestHandler(FileRule):
         file_name = "hi.py"
 
-        def handle_file(self, file: Path, output: Path) -> list[str]:
-            shutil.copy(file, output / file.name)
+    with tempfile.TemporaryDirectory() as tempdir:
+        output = Path(tempdir)
+        locations = ipsw_crawl_filesystem(mount_point=fake_fs, rule=TestHandler(), output=output)
 
-            return [file.name]
+        assert len(locations) == 1
 
-    handler = TestHandler()
-        
-    output = ipsw_crawl_filesystem(mount_point=fake_fs, file_handlers=[handler])
+        assert (output / "hi.py").exists()
+        assert not (output /"hi.c").exists()
+        assert not (output /"hi.txt").exists()
 
-    assert output.exists()
-    assert output.is_dir()
-    assert (output / "hi.py").exists()
-    assert not (output /"hi.c").exists()
-    assert not (output /"hi.txt").exists()
-
-    # cleanup
-    shutil.rmtree(output)
         
 
 def test_fs_crawl_type_signature(fake_fs: Path) -> None:
-    class TestHandler(FileHandler):
+    class TestHandler(FileRule):
         file_type = "Python script"
 
-        def handle_file(self, file: Path, output: Path) -> list[str]:
-            shutil.copy(file, output / file.name)
+    with tempfile.TemporaryDirectory() as tempdir:
+        output = Path(tempdir)
+        locations = ipsw_crawl_filesystem(mount_point=fake_fs, rule=TestHandler(), output=output)
 
-            return [file.name]
+        assert len(locations) == 1
 
-    handler = TestHandler()
-        
-    output = ipsw_crawl_filesystem(mount_point=fake_fs, file_handlers=[handler])
-
-    assert output.exists()
-    assert output.is_dir()
-    assert (output / "hi.py").exists()
-    assert not (output /"hi.c").exists()
-    assert not (output /"hi.txt").exists()
-
-    # cleanup
-    shutil.rmtree(output)
+        assert (output / "hi.py").exists()
+        assert not (output /"hi.c").exists()
+        assert not (output /"hi.txt").exists()
 
 
-def test_locations_json_is_correct(fake_fs: Path) -> None:
-    class TestHandler(FileHandler):
+def test_fs_crawl_name_and_type_signature(fake_fs: Path) -> None:
+    class TestHandler(FileRule):
+        file_name = "hi.py"
         file_type = "Python script"
 
-        def handle_file(self, file: Path, output: Path) -> list[str]:
-            shutil.copy(file, output / file.name)
+    with tempfile.TemporaryDirectory() as tempdir:
+        output = Path(tempdir)
+        locations = ipsw_crawl_filesystem(mount_point=fake_fs, rule=TestHandler(), output=output)
 
-            return [file.name]
+        assert len(locations) == 1
 
-    handler = TestHandler()
-        
-    output = ipsw_crawl_filesystem(mount_point=fake_fs, file_handlers=[handler])
+        assert (output / "hi.py").exists()
+        assert not (output /"hi.c").exists()
+        assert not (output /"hi.txt").exists()
 
-    locations_file = output / "locations.json"
-    assert locations_file.exists()
 
-    with open(locations_file) as f:
-        locations = json.load(f)
-        assert locations == {"hi.py": "hi.py"}
+def test_fs_crawl_matches_none(fake_fs: Path) -> None:
+    class TestHandler(FileRule):
+        file_name = "hi.c"
+        file_type = "Python script"
 
-    
+    with tempfile.TemporaryDirectory() as tempdir:
+        output = Path(tempdir)
+        locations = ipsw_crawl_filesystem(mount_point=fake_fs, rule=TestHandler(), output=output)
+
+        assert len(locations) == 0
+
+        assert not (output / "hi.py").exists()
+        assert not (output /"hi.c").exists()
+        assert not (output /"hi.txt").exists()
