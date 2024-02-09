@@ -6,7 +6,7 @@ import click
 import click_pathlib
 from flattenipsw.flatten import ipsw_unzip_context
 from flattenipsw.extract import ipsw_build_dmg_path, ipsw_mount_dmg_context
-from flattenipsw.crawl import DyldSharedCacheRule, ipsw_crawl_filesystem, BinaryFileRule
+from flattenipsw.crawl import ipsw_copy_shared_cache, ipsw_crawl_filesystem, BinaryFileRule
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -30,11 +30,11 @@ def main(ipsw: Path, output: Path | None = None):
             ipsw_crawl_filesystem(mount_point, rule=BinaryFileRule(), output=binaries_folder)
 
             if dmg_path.dyld_shared_cache is None:
-                ipsw_crawl_filesystem(mount_point, rule=DyldSharedCacheRule(), output=dyld_folder)
+                ipsw_copy_shared_cache(mount_point, dyld_folder)
 
         if dmg_path.dyld_shared_cache is not None:
             with ipsw_mount_dmg_context(dmg_path.dyld_shared_cache) as mount_point:
-                ipsw_crawl_filesystem(mount_point, rule=DyldSharedCacheRule(), output=dyld_folder)
+                ipsw_copy_shared_cache(mount_point, dyld_folder)
 
 
 

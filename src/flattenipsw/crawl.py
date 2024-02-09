@@ -99,12 +99,6 @@ class BinaryFileRule(FileRule):
     def invert_file_name(self) -> bool:
         return True
 
-class DyldSharedCacheRule(FileRule):
-    @property
-    def file_name(self) -> str:
-        return "dyld_shared_cache_arm64.*"
-    
-
 def ipsw_crawl_filesystem(mount_point: Path, rule: FileRule, output: Path) -> dict[Path, Path]:
     """Crawl the filesystem and copy all files matching the provided rules to the output directory.
 
@@ -132,6 +126,16 @@ def ipsw_crawl_filesystem(mount_point: Path, rule: FileRule, output: Path) -> di
 
     return locations
 
+def ipsw_copy_shared_cache(mount_point: Path, output: Path) -> None:
+    """Copy the dyld shared cache from the mounted filesystem to the output directory.
+
+    Args:
+        mount_point (Path): The path to the mounted filesystem.
+        output (Path): Where to emit the dyld shared cache.
+    """
+    shared_cache_path = mount_point / "root" / "System/Library/Caches/com.apple.dyld/"
+
+    shutil.copytree(str(shared_cache_path), str(output), dirs_exist_ok=True)
 
 def _ipsw_get_file_type(path: Path) -> str:
     """Calls the `file` command on the file and returns the result.
