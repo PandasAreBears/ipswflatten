@@ -4,7 +4,6 @@ from abc import ABC
 from pathlib import Path
 import shutil
 import subprocess
-from typing import Sequence
 from flattenipsw.exception import FailedToCreateOutputDirectory
 import logging
 
