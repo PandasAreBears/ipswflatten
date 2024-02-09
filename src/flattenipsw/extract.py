@@ -4,9 +4,11 @@ from pathlib import Path
 import plistlib
 import tempfile
 from typing import Generator
+from flattenipsw.crawl import _ipsw_get_file_type
 from flattenipsw.exception import InvalidBuildManfest
 import subprocess
 import logging
+import shutil
 
 logger = logging.getLogger(__name__)
 
@@ -107,3 +109,22 @@ def ipsw_unmount_dmg(mount_point: Path) -> None:
     subprocess.run(command, shell=True, check=True)
     mount_point.rmdir()
     logging.info(f"Unmounted {mount_point}")
+
+
+def ipsw_split_shared_cache(shared_cache_dir: Path, output: Path) -> None:
+    """Split the dyld shared cache into its constituent parts.
+
+    Args:
+        shared_cache_dir (Path): The path to the dyld shared cache directory.
+        output (Path): The output directory to emit the split cache parts to.
+    """
+    subprocess.run("dyldex_all dyld_shared_cache_arm64", cwd=shared_cache_dir, check=True, shell=True)
+
+    output.mkdir(exist_ok=True)
+
+    # Run dyldex_all creates a folder named 'binaries' in the current directory.
+    for file in (shared_cache_dir / "binaries").rglob("*"):
+        if "Mach-O" in _ipsw_get_file_type(file):
+            shutil.copy(file, output / file.name)
+
+    shutil.rmtree(shared_cache_dir / "binaries")

@@ -5,7 +5,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 import click
 import click_pathlib
 from flattenipsw.flatten import ipsw_unzip_context
-from flattenipsw.extract import ipsw_build_dmg_path, ipsw_mount_dmg_context
+from flattenipsw.extract import ipsw_build_dmg_path, ipsw_mount_dmg_context, ipsw_split_shared_cache
 from flattenipsw.crawl import ipsw_copy_shared_cache, ipsw_crawl_filesystem, BinaryFileRule
 import logging
 
@@ -22,6 +22,7 @@ def main(ipsw: Path, output: Path | None = None):
 
     binaries_folder = output / "binaries"
     dyld_folder = output / "dyld_shared_cache"
+    dyld_split = output / "split_dyld_cache"
 
     with ipsw_unzip_context(ipsw=ipsw) as unzipped:
         dmg_path = ipsw_build_dmg_path(unzipped)
@@ -35,6 +36,8 @@ def main(ipsw: Path, output: Path | None = None):
         if dmg_path.dyld_shared_cache is not None:
             with ipsw_mount_dmg_context(dmg_path.dyld_shared_cache) as mount_point:
                 ipsw_copy_shared_cache(mount_point, dyld_folder)
+
+        ipsw_split_shared_cache(dyld_folder, dyld_split)
 
 
 
